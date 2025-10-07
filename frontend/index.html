@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Report Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 1em;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+        
+        .file-input-label {
+            display: block;
+            padding: 14px;
+            border: 2px dashed #e0e0e0;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+        
+        .file-input-label:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .file-name {
+            margin-top: 8px;
+            color: #667eea;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+        
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .loading {
+            text-align: center;
+            margin-top: 30px;
+            display: none;
+        }
+        
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        
+        .loading-steps {
+            margin-top: 15px;
+            color: #666;
+            font-size: 0.95em;
+        }
+        
+        .result {
+            margin-top: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            display: none;
+        }
+        
+        .result h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .result h3 {
+            color: #667eea;
+            margin-top: 25px;
+            margin-bottom: 12px;
+            font-size: 1.3em;
+        }
+        
+        .result p {
+            margin-bottom: 15px;
+            line-height: 1.8;
+            color: #444;
+        }
+        
+        .result ul {
+            padding-left: 25px;
+            margin-bottom: 15px;
+        }
+        
+        .result li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+            color: #555;
+        }
+        
+        .download-btn {
+            margin-top: 25px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .download-btn:hover {
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+        }
+        
+        .error {
+            color: #ef4444;
+            background: #fee;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+            border-left: 4px solid #ef4444;
+        }
+        
+        .success-icon {
+            color: #10b981;
+            font-size: 1.2em;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .stat-card {
+            flex: 1;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AI Report Generator</h1>
+        <p class="subtitle">Generate professional reports with AI-powered insights and visualizations</p>
+        
+        <form id="reportForm">
+            <div class="form-group">
+                <label for="topic">📌 Report Topic *</label>
+                <input 
+                    type="text" 
+                    id="topic" 
+                    placeholder="e.g., Renewable Energy Market Trends 2025"
+                    required
+                >
+            </div>
+            
+            <div class="form-group">
+                <label>📄 Upload Document (Optional - PDF)</label>
+                <div class="file-input-wrapper">
+                    <input type="file" id="document" accept=".pdf">
+                    <label for="document" class="file-input-label">
+                        <span id="file-label-text">📁 Click to upload PDF or drag & drop</span>
+                    </label>
+                </div>
+                <div id="fileName" class="file-name"></div>
+            </div>
+            
+            <button type="submit" id="generateBtn">
+                🚀 Generate Report
+            </button>
+        </form>
+        
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">⏳ Generating your report...</p>
+            <p class="loading-steps" id="loadingSteps">Processing document...</p>
+        </div>
+        
+        <div class="error" id="error"></div>
+        
+        <div class="result" id="result">
+            <h2 id="reportTitle"></h2>
+            
+            <div class="stats" id="stats"></div>
+            
+            <div id="reportContent"></div>
+            
+            <button class="download-btn" id="downloadBtn">
+                📥 Download PDF Report
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('reportForm');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+        const error = document.getElementById('error');
+        const generateBtn = document.getElementById('generateBtn');
+        const loadingSteps = document.getElementById('loadingSteps');
+        const fileInput = document.getElementById('document');
+        const fileName = document.getElementById('fileName');
+        const fileLabelText = document.getElementById('file-label-text');
+        
+        let pdfUrl = '';
+        
+        // File input change handler
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                fileName.textContent = `Selected: ${file.name}`;
+                fileLabelText.textContent = '✅ File selected';
+            } else {
+                fileName.textContent = '';
+                fileLabelText.textContent = '📁 Click to upload PDF or drag & drop';
+            }
+        });
+        
+        // Form submit handler
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Reset UI
+            loading.style.display = 'block';
+            result.style.display = 'none';
+            error.style.display = 'none';
+            generateBtn.disabled = true;
+            
+            // Show progress steps
+            const steps = [
+                'Processing document...',
+                'Searching the web...',
+                'Analyzing with AI...',
+                'Generating charts...',
+                'Creating PDF...'
+            ];
+            
+            let stepIndex = 0;
+            const stepInterval = setInterval(() => {
+                if (stepIndex < steps.length) {
+                    loadingSteps.textContent = steps[stepIndex];
+                    stepIndex++;
+                }
+            }, 8000); // Change step every 8 seconds
+            
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('topic', document.getElementById('topic').value);
+            
+            const fileInput = document.getElementById('document');
+            if (fileInput.files[0]) {
+                formData.append('document', fileInput.files[0]);
+            }
+            
+            try {
+                const response = await fetch('http://localhost:5001/api/generate-report', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                clearInterval(stepInterval);
+                
+                if (data.success) {
+                    displayReport(data.report, data.charts_count, data.search_results_count);
+                    pdfUrl = `http://localhost:5001${data.pdf_url}`;
+                } else {
+                    throw new Error(data.error || 'Failed to generate report');
+                }
+                
+            } catch (err) {
+                clearInterval(stepInterval);
+                error.textContent = '❌ Error: ' + err.message;
+                error.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+                generateBtn.disabled = false;
+            }
+        });
+        
+        function displayReport(report, chartsCount, searchCount) {
+    document.getElementById('reportTitle').textContent = report.title;
+
+    // Display stats
+    const statsHtml = `
+        <div class="stat-card">
+            <div class="stat-value">${report.key_findings?.length || 0}</div>
+            <div class="stat-label">Key Findings</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${chartsCount}</div>
+            <div class="stat-label">Charts Generated</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${searchCount}</div>
+            <div class="stat-label">Sources Analyzed</div>
+        </div>
+    `;
+    document.getElementById('stats').innerHTML = statsHtml;
+
+    let content = `
+        <h3>📋 Executive Summary</h3>
+        <p>${report.executive_summary}</p>
+
+        <h3>🔍 Key Findings</h3>
+        <ul>
+            ${report.key_findings?.map(f => `<li>${f}</li>`).join('') || '<li>No findings available</li>'}
+        </ul>
+
+        <h3>📊 Charts</h3>
+        <div>
+            ${report.charts?.map(chart => `<div style="margin-bottom:20px;">
+                <h4>${chart.title || "Chart"}</h4>
+                <img src="${chart}" alt="Chart" style="max-width:600px;"/>
+            </div>`).join('') || '<p>No charts available</p>'}
+        </div>
+
+        <h3>💡 Recommendations</h3>
+        <ul>
+            ${report.recommendations?.map(r => `<li>${r}</li>`).join('') || '<li>No recommendations available</li>'}
+        </ul>
+    `;
+
+    if (report.citations && report.citations.length > 0) {
+        content += `
+            <h3>📚 References</h3>
+            <ul>
+                ${report.citations.map(c => `<li>${c}</li>`).join('')}
+            </ul>
+        `;
+    }
+
+    document.getElementById('reportContent').innerHTML = content;
+    result.style.display = 'block';
+    result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+        
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            if (pdfUrl) {
+                window.open(pdfUrl, '_blank');
+            }
+        });
+    </script>
+</body>
+</html>
